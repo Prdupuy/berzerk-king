@@ -174,7 +174,8 @@
 </head>
 <body>
     <div class="game-container">
-        <h1>♔ Jeu d'Échecs ♚</h1>
+        <h1>♔ Roi Fou (Berzerk King) ♚</h1>
+        <div style="text-align: center; color: #666; margin-bottom: 10px; font-style: italic;">Variante spéciale : Le roi peut bouger de 2 cases !</div>
         <div class="turn-indicator" id="turnIndicator">Tour des Blancs</div>
         <div class="board" id="board"></div>
         <div class="message" id="message"></div>
@@ -337,20 +338,43 @@
                     break;
                     
                 case 'k':
-                    const kingMoves = [
-                        [-1, -1], [-1, 0], [-1, 1],
-                        [0, -1], [0, 1],
-                        [1, -1], [1, 0], [1, 1]
-                    ];
+                    // ROI FOU - Peut bouger de 1 ou 2 cases dans toutes les directions !
+                    const kingMoves = [];
+                    // Mouvements de 1 case
+                    for (let dr = -1; dr <= 1; dr++) {
+                        for (let dc = -1; dc <= 1; dc++) {
+                            if (dr === 0 && dc === 0) continue;
+                            kingMoves.push([dr, dc]);
+                        }
+                    }
+                    // Mouvements de 2 cases (nouveauté du Roi Fou !)
+                    for (let dr = -2; dr <= 2; dr++) {
+                        for (let dc = -2; dc <= 2; dc++) {
+                            if (Math.abs(dr) === 2 || Math.abs(dc) === 2) {
+                                kingMoves.push([dr, dc]);
+                            }
+                        }
+                    }
+                    
                     kingMoves.forEach(([dr, dc]) => {
                         const newRow = row + dr;
                         const newCol = col + dc;
                         if (isValidMove(newRow, newCol, color)) {
-                            moves.push({row: newRow, col: newCol});
+                            // Pour les mouvements de 2 cases, vérifier qu'on ne saute pas par-dessus une pièce
+                            if (Math.abs(dr) === 2 || Math.abs(dc) === 2) {
+                                const midRow = row + Math.sign(dr);
+                                const midCol = col + Math.sign(dc);
+                                // Permettre le saut seulement si la case intermédiaire est vide ou en diagonale
+                                if (!board[midRow]?.[midCol] || (dr !== 0 && dc !== 0)) {
+                                    moves.push({row: newRow, col: newCol});
+                                }
+                            } else {
+                                moves.push({row: newRow, col: newCol});
+                            }
                         }
                     });
                     
-                    // Roque
+                    // Roque (conservé de la version classique)
                     if (!isInCheck(color)) {
                         const rights = castlingRights[color];
                         const kingRow = color === 'white' ? 7 : 0;
@@ -487,18 +511,18 @@
                     break;
                     
                 case 'k':
-                    const kingMoves = [
-                        [-1, -1], [-1, 0], [-1, 1],
-                        [0, -1], [0, 1],
-                        [1, -1], [1, 0], [1, 1]
-                    ];
-                    kingMoves.forEach(([dr, dc]) => {
-                        const newRow = row + dr;
-                        const newCol = col + dc;
-                        if (isValidMove(newRow, newCol, color)) {
-                            moves.push({row: newRow, col: newCol});
+                    // Roi Fou - mouvements étendus pour la détection d'échec
+                    const kingMoves = [];
+                    for (let dr = -2; dr <= 2; dr++) {
+                        for (let dc = -2; dc <= 2; dc++) {
+                            if (dr === 0 && dc === 0) continue;
+                            const newRow = row + dr;
+                            const newCol = col + dc;
+                            if (isValidMove(newRow, newCol, color)) {
+                                moves.push({row: newRow, col: newCol});
+                            }
                         }
-                    });
+                    }
                     break;
             }
             
